@@ -148,32 +148,41 @@ def search(term, scope='examples'):
     return result
 
 
-def colorize(sheet_content):
+def colorize(content, resource):
     """ Colorizes resource content if so configured """
 
     # only colorize if so configured
-    if not 'KB_COLORS' in os.environ:
-        return sheet_content
+    if not 'KB_COLORS' in os.environ or os.environ.get('KB_COLORS', '').lower() == 'false':
+        return content
 
     try:
         from pygments import highlight
         from pygments.lexers import get_lexer_by_name
-        from pygments.formatters import TerminalFormatter
+        from pygments.formatters import Terminal256Formatter
 
     # if pygments can't load, just return the uncolorized text
     except ImportError:
-        return sheet_content
+        return content
 
-    first_line = sheet_content.splitlines()[0]
-    lexer      = get_lexer_by_name('bash')
+    # default to markdown
+    lexer = get_lexer_by_name('md')
+
+    # try to get a lexer by the same name as the file
+    try:
+        lexer = get_lexer_by_name(resource)
+    except Exception:
+        pass
+
+    # check if the entire content is a code block and if so get the correct lexer
+    first_line = content.splitlines()[0]
     if first_line.startswith('```'):
-        sheet_content = '\n'.join(sheet_content.split('\n')[1:-2])
+        content = '\n'.join(content.splitlines()[1:]).rstrip('`\n')
         try:
             lexer = get_lexer_by_name(first_line[3:])
         except Exception:
             pass
 
-    return highlight(sheet_content, lexer, TerminalFormatter())
+    return highlight(content, lexer, Terminal256Formatter(style='monokai'))
 
 
 def die(message):

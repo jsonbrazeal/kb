@@ -93,21 +93,21 @@ if __name__ == '__main__':
         if options['--notes']:
             results = resources.search(options['<keyword>'], 'notes')
             if results:
-                print(resources.colorize(results))
+                print(resources.colorize(results, options['<keyword>']))
             else:
                 print(f"{options['<keyword>']} not found")
         # search all resources
         elif options['--all']:
             results = resources.search(options['<keyword>'], 'all')
             if results:
-                print(resources.colorize(results))
+                print(resources.colorize(results, options['<keyword>']))
             else:
                 print(f"{options['<keyword>']} not found")
         # search examples (default)
         else:
             results = resources.search(options['<keyword>'])
             if results:
-                print(resources.colorize(results))
+                print(resources.colorize(results, options['<keyword>']))
             else:
                 print(f"{options['<keyword>']} not found")
 
@@ -125,4 +125,4 @@ if __name__ == '__main__':
         if resource is None:
             print('-->Resource not found')
         else:
-            print(resources.colorize(resource))
+            print(resources.colorize(resource, options['<resource>']))
