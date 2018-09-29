@@ -6,7 +6,7 @@ import magic
 
 
 def read(resource):
-    """ Returns the contents of the resource as a String """
+    """Returns the contents of the resource as a string"""
     for r, p in list_resources('all'):
         if r == resource and os.path.exists(p):
             with open(p) as f:
@@ -14,6 +14,7 @@ def read(resource):
 
 
 def is_text_file(file_path):
+    """Returns true if a file's mimetype is text/whatever"""
     if not os.path.exists(file_path) or os.path.isdir(file_path) or not os.access(file_path, os.R_OK):
         return False
     mimetype = magic.from_file(file_path, mime=True)
@@ -23,19 +24,13 @@ def is_text_file(file_path):
 
 
 def ex_dir(pretty_print=False):
-    """ Returns the default example path """
+    """Returns a set with one member, the default example path"""
     example_dir = os.environ.get('KB_EX_PATH')
     if not example_dir:
         die('Please set the environment variable KB_EX_PATH.')
     example_dir = os.path.expanduser(os.path.expandvars(example_dir))
-    # create the KB_EX_PATH if it does not exist
     if not os.path.isdir(example_dir):
-        try:
-            # unclear on why this is necessary
-            os.umask(0000)
-            os.mkdir(example_dir)
-        except OSError:
-            die('Could not create KB_EX_PATH')
+        die('Please set the environment variable KB_EX_PATH to an existing directory.')
     # assert that the KB_EX_PATH is readable and writable
     if not os.access(example_dir, os.R_OK):
         die('The KB_EX_PATH (' + example_dir +') is not readable.')
@@ -51,7 +46,7 @@ def ex_dir(pretty_print=False):
 
 
 def kb_dirs(pretty_print=False):
-    """ Assembles a list of all directories containing resources """
+    """Assembles the set of all directories containing resources"""
 
     kb_path =os.environ.get('KB_PATH')
     if not kb_path:
@@ -61,8 +56,6 @@ def kb_dirs(pretty_print=False):
     if not os.path.isdir(kb_path):
         die('The KB_PATH must be a directory.')
 
-    # if pretty_print:
-    #     dirs.append(kb_path + ' (KB_PATH)')
     dirs = [kb_path]
     for root, directories, files in os.walk(kb_path):
         dirs.extend([os.path.join(root, d) for d in directories])
@@ -79,14 +72,14 @@ def kb_dirs(pretty_print=False):
 
 
 def note_dirs(pretty_print=False):
-    """ Assembles a list of all directories in the knowledge base that don't
+    """Assembles the set of all directories in the knowledge base that don't
     contain examples.
     """
     return kb_dirs(pretty_print=pretty_print) - ex_dir(pretty_print=pretty_print)
 
 
 def get(root_dirs):
-    """ Assembles a dictionary of resources as name => file-path recursively
+    """Assembles a dictionary of resources as name => file-path recursively
     throughout root_dir
     """
     resources = {}
@@ -100,7 +93,7 @@ def get(root_dirs):
 
 
 def list_resources(scope='examples', pretty_print=False):
-    """ Lists the available resources """
+    """Lists the available resources"""
 
     if scope == 'examples':
         root = ex_dir()
@@ -128,7 +121,7 @@ def list_resources(scope='examples', pretty_print=False):
 
 
 def search(term, scope='examples'):
-    """ Searches all resources for the term in the scope """
+    """Searches all resources for the term in the scope"""
     resources = list_resources(scope=scope)
 
     result = ''
@@ -149,7 +142,7 @@ def search(term, scope='examples'):
 
 
 def colorize(content, resource):
-    """ Colorizes resource content if so configured """
+    """Colorizes resource content if so configured"""
 
     # only colorize if so configured
     if not 'KB_COLORS' in os.environ or os.environ.get('KB_COLORS', '').lower() == 'false':
@@ -186,13 +179,13 @@ def colorize(content, resource):
 
 
 def die(message):
-    """ Prints a message to stderr and then terminates """
+    """Prints a message to stderr and then terminates"""
     print((message), file=sys.stderr)
     exit(1)
 
 
 def edit(file_path):
-    """ Open `file_path` using sublime """
+    """Open `file_path` using sublime"""
     if is_text_file(file_path):
         subprocess.run(['subl', '-n', file_path])
     else:
@@ -202,20 +195,21 @@ def edit(file_path):
         else:
             print(f'Unable to open {file_path}. Full path is required except for examples.')
 
+
 def create(resource):
-    """ Create example resource using sublime """
+    """Create example resource using sublime"""
     ex_path = ex_dir().pop()
     if os.path.exists(os.path.join(ex_path, resource)):
         die(f'Unable to create {resource} because it already exists. Try editing it instead.')
     else:
         subprocess.run(['subl', '-n', os.path.join(ex_path, resource)])
 
+
 def delete(resource):
-    """ Delete example resource """
+    """Delete example resource"""
     ex_path = ex_dir().pop()
     file_path = os.path.join(ex_path, resource)
     if not os.path.exists(file_path):
         die(f'Unable to delete {resource} because it does not exist.')
     else:
         os.remove(file_path)
-
