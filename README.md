@@ -2,7 +2,7 @@
 
 cheat
 =====
-`cheat` allows you to create and view interactive cheatsheets on the
+`cheat` allows you to create and view interactive resources on the
 command-line. It was designed to help remind \*nix system administrators of
 options for commands that they use frequently, but not frequently enough to
 remember.
@@ -19,10 +19,10 @@ Google, you may run:
 cheat tar
 ```
 
-You will be presented with a cheatsheet resembling:
+You will be presented with a resource resembling:
 
 ```sh
-# To extract an uncompressed archive: 
+# To extract an uncompressed archive:
 tar -xvf '/path/to/foo.tar'
 
 # To extract a .gz archive:
@@ -38,7 +38,7 @@ tar -xjvf '/path/to/foo.tgz'
 tar -cjvf '/path/to/foo.tgz' '/path/to/foo/'
 ```
 
-To see what cheatsheets are available, run `cheat -l`.
+To see what resources are available, run `cheat -l`.
 
 Note that, while `cheat` was designed primarily for \*nix system administrators,
 it is agnostic as to what content it stores. If you would like to use `cheat`
@@ -58,66 +58,66 @@ It is recommended to install `cheat` with `pip`:
 
 Modifying Cheatsheets
 ---------------------
-The value of `cheat` is that it allows you to create your own cheatsheets - the
+The value of `cheat` is that it allows you to create your own resources - the
 defaults are meant to serve only as a starting point, and can and should be
 modified.
 
 Cheatsheets are stored in the `~/.cheat/` directory, and are named on a
-per-keyphrase basis. In other words, the content for the `tar` cheatsheet lives
+per-keyphrase basis. In other words, the content for the `tar` resource lives
 in the `~/.cheat/tar` file.
 
-Provided that you have a `CHEAT_EDITOR`, `VISUAL`, or `EDITOR` environment
-variable set, you may edit cheatsheets with:
+Provided that you have a `VISUAL`, or `EDITOR` environment
+variable set, you may edit resources with:
 
 ```sh
 cheat -e foo
 ```
 
-If the `foo` cheatsheet already exists, it will be opened for editing.
+If the `foo` resource already exists, it will be opened for editing.
 Otherwise, it will be created automatically.
 
-After you've customized your cheatsheets, I urge you to track `~/.cheat/` along
+After you've customized your resources, I urge you to track `~/.cheat/` along
 with your [dotfiles][].
 
 
 Configuring
 -----------
 
-### Setting a DEFAULT_CHEAT_DIR ###
-Personal cheatsheets are saved in the `~/.cheat` directory by default, but you
-can specify a different default by exporting a `DEFAULT_CHEAT_DIR` environment
+### Setting a KB_EX_PATH ###
+Personal resources are saved in the `~/.cheat` directory by default, but you
+can specify a different default by exporting a `KB_EX_PATH` environment
 variable:
 
 ```sh
-export DEFAULT_CHEAT_DIR='/path/to/my/cheats'
+export KB_EX_PATH='/path/to/my/cheats'
 ```
 
-### Setting a CHEATPATH ###
-You can additionally instruct `cheat` to look for cheatsheets in other
-directories by exporting a `CHEATPATH` environment variable:
+### Setting a KB_PATH ###
+You can additionally instruct `cheat` to look for resources in other
+directories by exporting a `KB_PATH` environment variable:
 
 ```sh
-export CHEATPATH='/path/to/my/cheats'
+export KB_PATH='/path/to/my/cheats'
 ```
 
-You may, of course, append multiple directories to your `CHEATPATH`:
+You may, of course, append multiple directories to your `KB_PATH`:
 
 ```sh
-export CHEATPATH="$CHEATPATH:/path/to/more/cheats"
+export KB_PATH="$KB_PATH:/path/to/more/cheats"
 ```
 
-You may view which directories are on your `CHEATPATH` with `cheat -d`.
+You may view which directories are on your `KB_PATH` with `cheat -d`.
 
 ### Enabling Syntax Highlighting ###
-`cheat` can optionally apply syntax highlighting to your cheatsheets. To enable
-syntax highlighting, export a `CHEATCOLORS` environment variable:
+`cheat` can optionally apply syntax highlighting to your resources. To enable
+syntax highlighting, export a `KB_COLORS` environment variable:
 
 ```sh
-export CHEATCOLORS=true
+export KB_COLORS=true
 ```
 
 #### Specifying a Syntax Highlighter ####
-You may manually specify which syntax highlighter to use for each cheatsheet by
+You may manually specify which syntax highlighter to use for each resource by
 wrapping the sheet's contents in a [Github-Flavored Markdown code-fence][gfm].
 
 Example:
