@@ -210,3 +210,12 @@ def create(resource):
     else:
         subprocess.run(['subl', '-n', os.path.join(ex_path, resource)])
 
+def delete(resource):
+    """ Delete example resource """
+    ex_path = ex_dir().pop()
+    file_path = os.path.join(ex_path, resource)
+    if not os.path.exists(file_path):
+        die(f'Unable to delete {resource} because it does not exist.')
+    else:
+        os.remove(file_path)
+

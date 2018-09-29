@@ -13,6 +13,7 @@ Usage:
   kb <resource>
   kb -e <resource>
   kb -c <resource>
+  kb -x <resource>
   kb -s <keyword> [-a] [-n]
   kb -l [-a] [-n]
   kb -d [-a] [-n]
@@ -24,6 +25,7 @@ Options:
   -d --directories  List KB_EX_PATH by default, may be used with -a and -n
   -e --edit         Edit resource (full path required except for examples)
   -c --create       Create example resource in KB_EX_PATH
+  -x --delete       Delete example resource in KB_EX_PATH
   -l --list         List resources
   -s --search       Search for <keyword> in KB_EX_PATH by default, may be used with -a and -n
   -v --version      Print the version number
@@ -53,6 +55,9 @@ Examples:
 
   To create the `bar` example resource:
     kb -c bar
+
+  To delete the `bar` example resource:
+    kb -x bar
 """
 
 # require the dependencies
@@ -119,10 +124,14 @@ if __name__ == '__main__':
     elif options['--create']:
         resources.create(options['<resource>'])
 
+    # delete example resource
+    elif options['--delete']:
+        resources.delete(options['<resource>'])
+
     # show the resource
     else:
         resource = resources.read(options['<resource>'])
         if resource is None:
-            print('-->Resource not found')
+            print('☹️  Resource not found')
         else:
             print(resources.colorize(resource, options['<resource>']))
