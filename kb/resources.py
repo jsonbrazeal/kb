@@ -1,8 +1,16 @@
 import os
+import sys
+import subprocess
 
 import magic
 
-from kb.utils import die
+
+def read(resource):
+    """ Returns the contents of the resource as a String """
+    for r, p in list_resources('all'):
+        if r == resource and os.path.exists(p):
+            with open(p) as f:
+                return f.read()
 
 
 def is_text_file(file_path):
@@ -138,3 +146,58 @@ def search(term, scope='examples'):
             result += f'*****{r}*****:\n{match}\n'
 
     return result
+
+
+def colorize(sheet_content):
+    """ Colorizes resource content if so configured """
+
+    # only colorize if so configured
+    if not 'KB_COLORS' in os.environ:
+        return sheet_content
+
+    try:
+        from pygments import highlight
+        from pygments.lexers import get_lexer_by_name
+        from pygments.formatters import TerminalFormatter
+
+    # if pygments can't load, just return the uncolorized text
+    except ImportError:
+        return sheet_content
+
+    first_line = sheet_content.splitlines()[0]
+    lexer      = get_lexer_by_name('bash')
+    if first_line.startswith('```'):
+        sheet_content = '\n'.join(sheet_content.split('\n')[1:-2])
+        try:
+            lexer = get_lexer_by_name(first_line[3:])
+        except Exception:
+            pass
+
+    return highlight(sheet_content, lexer, TerminalFormatter())
+
+
+def die(message):
+    """ Prints a message to stderr and then terminates """
+    print((message), file=sys.stderr)
+    exit(1)
+
+
+def edit(file_path):
+    """ Open `file_path` using sublime """
+    if is_text_file(file_path):
+        subprocess.run(['subl', '-n', file_path])
+    else:
+        examples = list_resources(scope='examples')
+        if file_path in [e[0] for e in examples]:
+            subprocess.run(['subl', '-n', os.path.join(ex_dir().pop(), file_path)])
+        else:
+            print(f'Unable to open {file_path}. Full path is required except for examples.')
+
+def create(resource):
+    """ Create example resource using sublime """
+    ex_path = ex_dir().pop()
+    if os.path.exists(os.path.join(ex_path, resource)):
+        die(f'Unable to create {resource} because it already exists. Try editing it instead.')
+    else:
+        subprocess.run(['subl', '-n', os.path.join(ex_path, resource)])
+

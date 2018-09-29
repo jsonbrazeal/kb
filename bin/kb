@@ -12,6 +12,7 @@ environment variable KB_PATH.
 Usage:
   kb <resource>
   kb -e <resource>
+  kb -c <resource>
   kb -s <keyword> [-a] [-n]
   kb -l [-a] [-n]
   kb -d [-a] [-n]
@@ -21,7 +22,8 @@ Options:
   -a --all          Apply action to all resources
   -n --notes        Apply action to plain text notes only (.md or .txt files)
   -d --directories  List KB_EX_PATH by default, may be used with -a and -n
-  -e --edit         Edit resource (full path required)
+  -e --edit         Edit resource (full path required except for examples)
+  -c --create       Create example resource in KB_EX_PATH
   -l --list         List resources
   -s --search       Search for <keyword> in KB_EX_PATH by default, may be used with -a and -n
   -v --version      Print the version number
@@ -46,13 +48,15 @@ Examples:
   To search for "ssh" among all resources:
     kb -s -a ssh
 
-  To edit (or create) the `foo` resource:
+  To edit the `foo` resource:
     kb -e /path/to/foo
+
+  To create the `bar` example resource:
+    kb -c bar
 """
 
 # require the dependencies
-from kb import resource, resources
-from kb.utils import colorize
+from kb import resources
 from docopt import docopt
 
 
@@ -89,32 +93,36 @@ if __name__ == '__main__':
         if options['--notes']:
             results = resources.search(options['<keyword>'], 'notes')
             if results:
-                print(colorize(results))
+                print(resources.colorize(results))
             else:
                 print(f"{options['<keyword>']} not found")
         # search all resources
         elif options['--all']:
             results = resources.search(options['<keyword>'], 'all')
             if results:
-                print(colorize(results))
+                print(resources.colorize(results))
             else:
                 print(f"{options['<keyword>']} not found")
         # search examples (default)
         else:
             results = resources.search(options['<keyword>'])
             if results:
-                print(colorize(results))
+                print(resources.colorize(results))
             else:
                 print(f"{options['<keyword>']} not found")
 
-    # create/edit resource
+    # edit resource
     elif options['--edit']:
-        resource.create_or_edit(options['<resource>'])
+        resources.edit(options['<resource>'])
 
-    # print the resource
+    # create example resource
+    elif options['--create']:
+        resources.create(options['<resource>'])
+
+    # show the resource
     else:
-        resource = resource.read(options['<resource>'])
+        resource = resources.read(options['<resource>'])
         if resource is None:
             print('-->Resource not found')
         else:
-            print(colorize(resource))
+            print(resources.colorize(resource))
