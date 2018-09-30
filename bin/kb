@@ -15,8 +15,8 @@ Usage:
   kb -c <resource>
   kb -x <resource>
   kb -l [-a] [-n] [-w]
-  kb -d [-a] [-n]
-  kb -s <keyword> [-a] [-n]
+  kb -d [-a] [-n] [-w]
+  kb -s <keyword> [-a] [-n] [-w]
   kb -f
   kb -v
   kb -h
@@ -76,6 +76,7 @@ Examples:
 
 """
 
+import os
 import pydoc
 import subprocess
 
@@ -100,46 +101,73 @@ if __name__ == '__main__':
 
     # list directories
     if options['--directories']:
+
+        # validation
+        if options['--notes'] and (options['--all'] or options['--web']):
+            die('--notes option not possible with --all and/or --web')
+
         # list notes directories
         if options['--notes']:
             print_or_page("\n".join(sorted(note_dirs(pretty_print=True))))
         # list all directories resources
         elif options['--all']:
-            print_or_page("\n".join(sorted(kb_dirs(pretty_print=True))))
+            dirs = sorted(kb_dirs(pretty_print=True))
+            if not options['--web']:
+                ex_path = ex_dir().pop()
+                web_ex_path = os.path.join(ex_path, '.web')
+                dirs.remove(web_ex_path)
+            print_or_page("\n".join(dirs))
         # list examples directory (default)
         else:
-            print_or_page("\n".join(sorted(ex_dir(pretty_print=True))))
+            if options['--web']:
+                ex_path = ex_dir().pop()
+                web_ex_path = os.path.join(ex_path, '.web/')
+                dirs = list(ex_dir(pretty_print=True))
+                dirs.append(web_ex_path)
+                print_or_page("\n".join(sorted(dirs)))
+            else:
+                print_or_page("\n".join(sorted(ex_dir(pretty_print=True))))
 
     # list resources
     elif options['--list']:
+
+        # validation
+        if options['--notes'] and (options['--all'] or options['--web']):
+            die('--notes option not possible with --all and/or --web')
+
         # list notes
         if options['--notes']:
             print_or_page(list_resources('notes', pretty_print=True))
         # list all resources
         elif options['--all']:
-            print_or_page(list_resources('all', pretty_print=True))
+            print_or_page(list_resources('all', pretty_print=True, include_web=options['--web']))
         # list examples (default)
         else:
             print_or_page(list_resources(pretty_print=True, include_web=options['--web']))
 
     elif options['--search']:
+
+        # validation
+        if options['--notes'] and (options['--all'] or options['--web']):
+            die('--notes option not possible with --all and/or --web')
+
         # search notes
         if options['--notes']:
-            results = search(options['<keyword>'], 'notes')
+            results = search(options['<keyword>'], scope='notes', include_web=options['--web'])
             if results:
                 print_or_page(colorize(results, options['<keyword>']))
             else:
                 die(f"{options['<keyword>']} not found")
         # search all resources
         elif options['--all']:
-            results = search(options['<keyword>'], 'all')
+            results = search(options['<keyword>'], scope='all', include_web=options['--web'])
             if results:
                 print_or_page(colorize(results, options['<keyword>']))
             else:
                 die(f"{options['<keyword>']} not found")
         # search examples (default)
         else:
-            results = search(options['<keyword>'])
+            results = search(options['<keyword>'], scope='examples', include_web=options['--web'])
             if results:
                 print_or_page(colorize(results, options['<keyword>']))
             else:

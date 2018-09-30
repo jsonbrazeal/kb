@@ -70,7 +70,9 @@ def note_dirs(pretty_print=False):
     """Assembles the set of all directories in the knowledge base that don't
     contain examples.
     """
-    return kb_dirs(pretty_print=pretty_print) - ex_dir(pretty_print=pretty_print)
+    ex_path = ex_dir().pop()
+    web_ex_path = os.path.join(ex_path, '.web')
+    return kb_dirs(pretty_print=pretty_print) - ex_dir(pretty_print=pretty_print) - {web_ex_path}
 
 
 def list_resources(scope='examples', pretty_print=False, include_web=False):
@@ -112,12 +114,16 @@ def list_resources(scope='examples', pretty_print=False, include_web=False):
             resources_output += f'{r[0][:40]:<45} {r[1][:80]}\n'
         return resources_output
 
-    return resources
+    return set(resources)
 
 
-def search(term, scope='examples'):
+def search(term, scope='examples', include_web=False):
     """Searches all resources for the term in the scope"""
-    resources = list_resources(scope=scope)
+    resources = list_resources(scope=scope, include_web=include_web)
+    # if not include_web:
+    #     ex_path = ex_dir().pop()
+    #     web_ex_path = os.path.join(ex_path, '.web/')
+    #     resources = [r for r in resources if web_ex_path not in r[1]]
 
     result = ''
 
