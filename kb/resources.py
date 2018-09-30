@@ -73,35 +73,35 @@ def note_dirs(pretty_print=False):
     return kb_dirs(pretty_print=pretty_print) - ex_dir(pretty_print=pretty_print)
 
 
-def get(root_dirs):
-    """Assembles a dictionary of resources as name => file-path recursively
-    throughout root_dir
-    """
-    resources = {}
-    for root_dir in root_dirs:
+def list_resources(scope='examples', pretty_print=False, include_web=False):
+    """Lists the available resources"""
+
+    if scope == 'examples':
+        root_set = ex_dir()
+    elif scope == 'notes':
+        root_set = note_dirs()
+    elif scope == 'all':
+        root_set = kb_dirs()
+    else:
+        return None
+
+    resources = []
+    for root_dir in root_set:
         for root, directories, files in os.walk(root_dir):
             for f in files:
                 if f.startswith('.') or f.startswith('__'):
                     continue
-                resources.update({f: os.path.join(root, f)})
-    return resources
+                resources.append((f, os.path.join(root, f)))
 
+    resources = sorted(resources, key=lambda kv: str.lower(kv[0]))
 
-def list_resources(scope='examples', pretty_print=False):
-    """Lists the available resources"""
-
-    if scope == 'examples':
-        root = ex_dir()
-    elif scope == 'notes':
-        root = note_dirs()
-    elif scope == 'all':
-        root = kb_dirs()
-    else:
-        return None
-
-    resources = sorted(get(root).items(), key=lambda kv: str.lower(kv[0]))
     if not len(resources):
         return None
+
+    if not include_web:
+        ex_path = ex_dir().pop()
+        web_ex_path = os.path.join(ex_path, '.web/')
+        resources = [r for r in resources if web_ex_path not in r[1]]
 
     if scope == 'notes':
         resources = [(r, p) for r, p in resources if r.endswith(('md', 'txt'))]
@@ -184,13 +184,13 @@ def edit(file_path, notes=False):
     edit_path = ''
     # check examples path first (kb html)
     examples = list_resources(scope='examples')
-    if file_path in [e[0] for e in examples]:
+    local_examples = [e for e in examples if '.web' not in e[1]]
+    if file_path in [e[0] for e in local_examples]:
         edit_path = os.path.join(ex_dir().pop(), file_path)
     # check notes path next, full path required (kb "$KB_PATH/dev/html")
     notes = list_resources(scope='notes')
     if file_path in [e[1] for e in notes] and is_text_file(file_path):
         edit_path = file_path
-
     if not edit_path:
         die(f'Unable to open {file_path} for editing.')
 
@@ -220,10 +220,13 @@ def read(resource):
     """Returns the contents of the resource as a string. Searches examples path
     first, then considers notes paths.
     """
+    output = ''
     for r, p in list_resources('examples'):
         if r == resource and os.path.exists(p):
             with open(p) as f:
-                return f.read()
+                output += f.read()
+    if output:
+        return output
 
     for r, p in list_resources('notes'):
         if p == resource and os.path.exists(p):
