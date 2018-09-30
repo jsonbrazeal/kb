@@ -1,6 +1,8 @@
+from io import BytesIO
 import os
 import subprocess
 import sys
+from zipfile import ZipFile
 
 import magic
 import requests
@@ -216,7 +218,7 @@ def delete(resource):
 
 def read(resource):
     """Returns the contents of the resource as a string. Searches examples path
-    first, then considers notes paths
+    first, then considers notes paths.
     """
     for r, p in list_resources('examples'):
         if r == resource and os.path.exists(p):
@@ -230,15 +232,84 @@ def read(resource):
 
 
 def fetch():
-    """Fetch and build example resources from the web in KB_EX_PATH/_web"""
+    """Fetch and build example resources from the web in KB_EX_PATH/.web"""
     ex_path = ex_dir().pop()
-    web_ex_path = os.path.join(ex_path, '_web')
+    web_ex_path = os.path.join(ex_path, '.web/')
     if not os.path.exists(web_ex_path):
         try:
             os.mkdir(web_ex_path)
         except Exception as e:
             print(e)
             die(f'{web_ex_path} did not exist and an error occurred when trying to create it.')
-    URLS = ('https://github.com/chubin/cheat.sheets/archive/master.zip', 'https://github.com/tldr-pages/tldr/archive/master.zip', 'https://github.com/chrisallenlane/cheat/archive/master.zip', 'https://github.com/srsudar/eg/archive/master.zip')
-    print(f'fetching data from {URLS}')
 
+    # fork all these to my github and point these links there
+    # Dict[url: zip_target_dir]
+    URLS = {'https://github.com/chubin/cheat.sheets/archive/master.zip': 'cheat.sheets-master/sheets/',
+            'https://github.com/chrisallenlane/cheat/archive/master.zip': 'cheat-master/cheat/cheatsheets/',
+            'https://github.com/tldr-pages/tldr/archive/master.zip': 'tldr-master/pages/',
+            'https://github.com/srsudar/eg/archive/master.zip': 'eg-master/eg/examples/'}
+
+    for url in URLS.keys():
+        print(f'fetching data from {url}...')
+        response = requests.get(url)
+        if 'tldr' in url:
+            with ZipFile(BytesIO(response.content), 'r') as repo_file:
+                for info in repo_file.infolist():
+                    if not info.filename.startswith(URLS[url]):
+                        continue
+                    resource = info.filename.replace(URLS[url], '')
+                    if not resource:
+                        continue # skip zip_target_dir/URLS[url]
+                    if resource in ('common/', 'linux/', 'osx/', 'windows/'):
+                        continue # skip category dirs
+                    target_file_name, _ = os.path.splitext(os.path.basename(info.filename))
+                    target_file_path = os.path.join(web_ex_path, target_file_name)
+                    if target_file_path == web_ex_path:
+                        continue
+                    data = repo_file.read(info)
+                    category = resource.split(os.sep)[0]
+                    if category == 'common':
+                        notes = ''
+                    elif category == 'linux':
+                        notes = ' (linux)'
+                    elif category == 'osx':
+                        notes = ' (macos)'
+                    elif category == 'windows':
+                        notes = ' (windows)'
+                    with open(target_file_path, 'a') as f:
+                        lines = data.decode('utf-8').splitlines()
+                        lines[0] = lines[0] + notes
+                        if f.tell(): # f.tell() == 0 means the file has no content
+                            f.write('\n\n')
+                        f.write('\n'.join(lines))
+        else:
+            with ZipFile(BytesIO(response.content), 'r') as repo_file:
+                for info in repo_file.infolist():
+                    if not info.filename.startswith(URLS[url]):
+                        continue
+                    resource = info.filename.replace(URLS[url], '')
+                    if not resource:
+                        continue # skip zip_web_ex_path
+                    if len(resource.split(os.sep)) > 1:
+                        continue # skip directories inside zip_web_ex_path
+                    if not resource[0].isalnum():
+                        continue # skip files beginning with non alphanumeric chars
+                    file_name, file_ext = os.path.splitext(resource)
+                    if file_ext not in ('', '.md'):
+                        continue # only allow files with no extension or .md files
+                    data = repo_file.read(info)
+                    data_str = data.decode('utf-8')
+                    first_line = data_str.splitlines()[0]
+                    target_file_path = os.path.join(web_ex_path, os.path.basename(file_name))
+                    with open(target_file_path, 'a') as f:
+                        if f.tell(): # f.tell() == 0 means the file has no content
+                            f.write('\n\n') # add space before adding more content
+                        elif f'# {file_name}' not in first_line:
+                            f.write(f'# {file_name}\n\n') # add md header as the first thing in the file if not present
+                        # if 'cheat.sheets-master' in z or 'cheat-master' in z:
+                        #     f.write('```bash\n')
+                        #     f.write(data_str)
+                        #     f.write('```\n')
+                        # else:
+                        f.write(data_str)
+    return('done!')
