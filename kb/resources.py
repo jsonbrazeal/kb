@@ -253,10 +253,10 @@ def fetch():
 
     # fork all these to my github and point these links there
     # Dict[url: zip_target_dir]
-    URLS = {'https://github.com/chubin/cheat.sheets/archive/master.zip': 'cheat.sheets-master/sheets/',
-            'https://github.com/chrisallenlane/cheat/archive/master.zip': 'cheat-master/cheat/cheatsheets/',
-            'https://github.com/tldr-pages/tldr/archive/master.zip': 'tldr-master/pages/',
-            'https://github.com/srsudar/eg/archive/master.zip': 'eg-master/eg/examples/'}
+    URLS = {'https://github.com/jsonbrazeal/cheat.sheets/archive/master.zip': 'cheat.sheets-master/sheets/',
+            'https://github.com/jsonbrazeal/cheat/archive/master.zip': 'cheat-master/cheat/cheatsheets/',
+            'https://github.com/jsonbrazeal/tldr/archive/master.zip': 'tldr-master/pages/',
+            'https://github.com/jsonbrazeal/eg/archive/master.zip': 'eg-master/eg/examples/'}
 
     for url in URLS.keys():
         print(f'fetching data from {url}...')
