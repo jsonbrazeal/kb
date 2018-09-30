@@ -14,5 +14,5 @@ setup(
     url="https://github.com/jsonbrazeal/kb",
     packages=["kb", "kb.test"],
     scripts=["bin/kb"],
-    install_requires=["docopt >= 0.6.1", "pygments >= 1.6.0", "python-magic >= 0.4.15"],
+    install_requires=["docopt >= 0.6.1", "pygments >= 1.6.0", "python-magic >= 0.4.15", "requests >= 2.19.1"],
 )
