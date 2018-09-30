@@ -2,11 +2,11 @@
 
 """kb
 
-View, edit, and create knowledge base resources on the command line. kb recognizes
-3 types of resources: examples, notes, and other resources. The path to examples
+View and manage knowledge base resources on the command line. kb recognizes
+3 types of resources: examples, notes, and other. The path to examples
 is set with the environment variable KB_EX_PATH, and commands like search and list
 default to the examples path. To expand these command to more paths, pass a flag
-for notes or all resources. The root path for all resources is set with the
+for notes only or all resources. The root path for all resources is set with the
 environment variable KB_PATH.
 
 Usage:
@@ -14,21 +14,29 @@ Usage:
   kb -e <resource>
   kb -c <resource>
   kb -x <resource>
-  kb -s <keyword> [-a] [-n]
   kb -l [-a] [-n]
   kb -d [-a] [-n]
+  kb -s <keyword> [-a] [-n]
+  kb -f
   kb -v
+  kb -h
 
 Options:
-  -a --all          Apply action to all resources
-  -n --notes        Apply action to plain text notes only (.md or .txt files)
-  -d --directories  List KB_EX_PATH by default, may be used with -a and -n
-  -e --edit         Edit resource (full path required except for examples)
+  -e --edit         Edit example resource; searches for resource by file name in
+                    KB_EX_PATH first, then searches for resource by full path in KB_PATH
   -c --create       Create example resource in KB_EX_PATH
   -x --delete       Delete example resource in KB_EX_PATH
-  -l --list         List resources
-  -s --search       Search for <keyword> in KB_EX_PATH by default, may be used with -a and -n
-  -v --version      Print the version number
+
+  -d --directories  List KB_EX_PATH by default; may be used with -a and -n
+  -l --list         List resources in KB_EX_PATH by default; may be used with -a and -n
+  -s --search       Search for <keyword> in KB_EX_PATH by default; may be used with -a and -n
+
+  -a --all          Apply action to all resources
+  -n --notes        Apply action to plain text notes only (.md or .txt files)
+
+  -f --fetch        Fetch and build example resources from the web in KB_EX_PATH/_web
+  -v --version      Print version
+  -h --help         Print help
 
 Examples:
 
@@ -50,19 +58,39 @@ Examples:
   To search for "ssh" among all resources:
     kb -s -a ssh
 
-  To edit the `foo` resource:
-    kb -e /path/to/foo
-
   To create the `bar` example resource:
     kb -c bar
 
+  To edit the `bar` example resource:
+    kb -e bar
+
   To delete the `bar` example resource:
     kb -x bar
+
+  To edit the `foo` note (text files only, full path required with -n option):
+    kb -e /path/to/foo/note -n
+
+  To fetch and build example resources from the web:
+    kb -f
+
 """
 
-# require the dependencies
-from kb import resources
+import pydoc
+import subprocess
+
 from docopt import docopt
+
+from kb.resources import (die, note_dirs, kb_dirs, ex_dir, list_resources, search,
+                          colorize, edit, create, delete, fetch, read)
+
+
+def print_or_page(text):
+    """Prints all text or pages text depending on size of terminal"""
+    term_height = int(subprocess.run(['tput', 'lines'], stdout=subprocess.PIPE).stdout)
+    if len(text.splitlines()) > term_height:
+        pydoc.pager(text)
+    else:
+        print(text)
 
 
 if __name__ == '__main__':
@@ -73,65 +101,69 @@ if __name__ == '__main__':
     if options['--directories']:
         # list notes directories
         if options['--notes']:
-            print("\n".join(sorted(resources.note_dirs(pretty_print=True))))
+            print_or_page("\n".join(sorted(note_dirs(pretty_print=True))))
         # list all directories resources
         elif options['--all']:
-            print("\n".join(sorted(resources.kb_dirs(pretty_print=True))))
+            print_or_page("\n".join(sorted(kb_dirs(pretty_print=True))))
         # list examples directory (default)
         else:
-            print("\n".join(sorted(resources.ex_dir(pretty_print=True))))
+            print_or_page("\n".join(sorted(ex_dir(pretty_print=True))))
 
     # list resources
     elif options['--list']:
         # list notes
         if options['--notes']:
-            print(resources.list_resources('notes', pretty_print=True))
+            print_or_page(list_resources('notes', pretty_print=True))
         # list all resources
         elif options['--all']:
-            print(resources.list_resources('all', pretty_print=True))
+            print_or_page(list_resources('all', pretty_print=True))
         # list examples (default)
         else:
-            print(resources.list_resources(pretty_print=True))
+            print_or_page(list_resources(pretty_print=True))
 
     elif options['--search']:
         # search notes
         if options['--notes']:
-            results = resources.search(options['<keyword>'], 'notes')
+            results = search(options['<keyword>'], 'notes')
             if results:
-                print(resources.colorize(results, options['<keyword>']))
+                print_or_page(colorize(results, options['<keyword>']))
             else:
-                print(f"{options['<keyword>']} not found")
+                die(f"{options['<keyword>']} not found")
         # search all resources
         elif options['--all']:
-            results = resources.search(options['<keyword>'], 'all')
+            results = search(options['<keyword>'], 'all')
             if results:
-                print(resources.colorize(results, options['<keyword>']))
+                print_or_page(colorize(results, options['<keyword>']))
             else:
-                print(f"{options['<keyword>']} not found")
+                die(f"{options['<keyword>']} not found")
         # search examples (default)
         else:
-            results = resources.search(options['<keyword>'])
+            results = search(options['<keyword>'])
             if results:
-                print(resources.colorize(results, options['<keyword>']))
+                print_or_page(colorize(results, options['<keyword>']))
             else:
-                print(f"{options['<keyword>']} not found")
+                die(f"{options['<keyword>']} not found")
 
     # edit resource
     elif options['--edit']:
-        resources.edit(options['<resource>'])
+        edit(options['<resource>'], notes=options['--notes'])
 
     # create example resource
     elif options['--create']:
-        resources.create(options['<resource>'])
+        create(options['<resource>'])
 
     # delete example resource
     elif options['--delete']:
-        resources.delete(options['<resource>'])
+        delete(options['<resource>'])
+
+    # fetch and build example resources from the web
+    elif options['--fetch']:
+        print_or_page(fetch())
 
     # show the resource
     else:
-        resource = resources.read(options['<resource>'])
+        resource = read(options['<resource>'])
         if resource is None:
-            print('☹️  Resource not found')
-        else:
-            print(resources.colorize(resource, options['<resource>']))
+            die('☹️  Resource not found')
+        colorized = colorize(resource, options['<resource>'])
+        print_or_page(colorized)

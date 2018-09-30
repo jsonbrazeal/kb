@@ -1,16 +1,9 @@
 import os
-import sys
 import subprocess
+import sys
 
 import magic
-
-
-def read(resource):
-    """Returns the contents of the resource as a string"""
-    for r, p in list_resources('all'):
-        if r == resource and os.path.exists(p):
-            with open(p) as f:
-                return f.read()
+import requests
 
 
 def is_text_file(file_path):
@@ -141,7 +134,7 @@ def search(term, scope='examples'):
     return result
 
 
-def colorize(content, resource):
+def colorize(content, resource_name):
     """Colorizes resource content if so configured"""
 
     # only colorize if so configured
@@ -162,7 +155,7 @@ def colorize(content, resource):
 
     # try to get a lexer by the same name as the file
     try:
-        lexer = get_lexer_by_name(resource)
+        lexer = get_lexer_by_name(resource_name)
     except Exception:
         pass
 
@@ -184,16 +177,22 @@ def die(message):
     exit(1)
 
 
-def edit(file_path):
+def edit(file_path, notes=False):
     """Open `file_path` using sublime"""
-    if is_text_file(file_path):
-        subprocess.run(['subl', '-n', file_path])
-    else:
-        examples = list_resources(scope='examples')
-        if file_path in [e[0] for e in examples]:
-            subprocess.run(['subl', '-n', os.path.join(ex_dir().pop(), file_path)])
-        else:
-            print(f'Unable to open {file_path}. Full path is required except for examples.')
+    edit_path = ''
+    # check examples path first (kb html)
+    examples = list_resources(scope='examples')
+    if file_path in [e[0] for e in examples]:
+        edit_path = os.path.join(ex_dir().pop(), file_path)
+    # check notes path next, full path required (kb "$KB_PATH/dev/html")
+    notes = list_resources(scope='notes')
+    if file_path in [e[1] for e in notes] and is_text_file(file_path):
+        edit_path = file_path
+
+    if not edit_path:
+        die(f'Unable to open {file_path} for editing.')
+
+    subprocess.run(['subl', '-n', edit_path])
 
 
 def create(resource):
@@ -213,3 +212,33 @@ def delete(resource):
         die(f'Unable to delete {resource} because it does not exist.')
     else:
         os.remove(file_path)
+
+
+def read(resource):
+    """Returns the contents of the resource as a string. Searches examples path
+    first, then considers notes paths
+    """
+    for r, p in list_resources('examples'):
+        if r == resource and os.path.exists(p):
+            with open(p) as f:
+                return f.read()
+
+    for r, p in list_resources('notes'):
+        if p == resource and os.path.exists(p):
+            with open(p) as f:
+                return f.read()
+
+
+def fetch():
+    """Fetch and build example resources from the web in KB_EX_PATH/_web"""
+    ex_path = ex_dir().pop()
+    web_ex_path = os.path.join(ex_path, '_web')
+    if not os.path.exists(web_ex_path):
+        try:
+            os.mkdir(web_ex_path)
+        except Exception as e:
+            print(e)
+            die(f'{web_ex_path} did not exist and an error occurred when trying to create it.')
+    URLS = ('https://github.com/chubin/cheat.sheets/archive/master.zip', 'https://github.com/tldr-pages/tldr/archive/master.zip', 'https://github.com/chrisallenlane/cheat/archive/master.zip', 'https://github.com/srsudar/eg/archive/master.zip')
+    print(f'fetching data from {URLS}')
+
