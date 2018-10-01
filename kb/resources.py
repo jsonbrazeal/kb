@@ -231,10 +231,10 @@ def read(resource):
     first, then considers notes paths.
     """
     output = ''
-    for r, p in list_resources('examples'):
+    for r, p in list_resources('examples', include_web=True):
         if r == resource and os.path.exists(p):
             with open(p) as f:
-                output += f.read()
+                output += f.read() + '\n'
     if output:
         return output
 
