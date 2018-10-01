@@ -90,12 +90,16 @@ def list_resources(scope='examples', pretty_print=False, include_web=False):
     ex_path = ex_dir().pop()
     web_ex_path = os.path.join(ex_path, '.web/')
 
-    if include_web:
-        root_set.add(web_ex_path)
-
     resources = []
     for root_dir in root_set:
         for root, directories, files in os.walk(root_dir):
+            for f in files:
+                if f.startswith('.') or f.startswith('__'):
+                    continue
+                resources.append((f, os.path.join(root, f)))
+
+    if include_web:
+        for root, directories, files in os.walk(web_ex_path):
             for f in files:
                 if f.startswith('.') or f.startswith('__'):
                     continue
