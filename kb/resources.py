@@ -98,14 +98,14 @@ def list_resources(scope='examples', pretty_print=False, include_web=False):
                     continue
                 resources.append((f, os.path.join(root, f)))
 
+    resources = sorted(resources, key=lambda kv: str.lower(kv[0]))
+
     if include_web:
         for root, directories, files in os.walk(web_ex_path):
             for f in files:
                 if f.startswith('.') or f.startswith('__'):
                     continue
                 resources.append((f, os.path.join(root, f)))
-
-    resources = sorted(resources, key=lambda kv: str.lower(kv[0]))
 
     if not len(resources):
         return None
