@@ -100,21 +100,26 @@ def list_resources(scope='examples', pretty_print=False, include_web=False):
 
     resources = sorted(resources, key=lambda kv: str.lower(kv[0]))
 
+    if not len(resources):
+        return None
+
+    if scope == 'notes':
+        resources = [(r, p) for r, p in resources if r.endswith(('md', 'txt'))]
+
+    resources = set(resources)
+
+    web_resources = []
     if include_web:
         for root, directories, files in os.walk(web_ex_path):
             for f in files:
                 if f.startswith('.') or f.startswith('__'):
                     continue
-                resources.append((f, os.path.join(root, f)))
-
-    if not len(resources):
-        return None
+                web_resources.append((f, os.path.join(root, f)))
+        for r in web_resources:
+            resources.add(r)
 
     if not include_web:
         resources = [r for r in resources if web_ex_path not in r[1]]
-
-    if scope == 'notes':
-        resources = [(r, p) for r, p in resources if r.endswith(('md', 'txt'))]
 
     if pretty_print:
         resources_output = ''
@@ -122,7 +127,7 @@ def list_resources(scope='examples', pretty_print=False, include_web=False):
             resources_output += f'{r[0][:40]:<45} {r[1][:80]}\n'
         return resources_output
 
-    return set(resources)
+    return resources
 
 
 def search(term, scope='examples', include_web=False):
