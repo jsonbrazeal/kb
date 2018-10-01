@@ -87,6 +87,12 @@ def list_resources(scope='examples', pretty_print=False, include_web=False):
     else:
         return None
 
+    ex_path = ex_dir().pop()
+    web_ex_path = os.path.join(ex_path, '.web/')
+
+    if include_web:
+        root_set.add(web_ex_path)
+
     resources = []
     for root_dir in root_set:
         for root, directories, files in os.walk(root_dir):
@@ -101,8 +107,6 @@ def list_resources(scope='examples', pretty_print=False, include_web=False):
         return None
 
     if not include_web:
-        ex_path = ex_dir().pop()
-        web_ex_path = os.path.join(ex_path, '.web/')
         resources = [r for r in resources if web_ex_path not in r[1]]
 
     if scope == 'notes':
