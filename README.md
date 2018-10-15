@@ -34,7 +34,7 @@ Options:
   -n --notes        Apply action to plain text notes only (.md or .txt files)
   -w --web          Include resources fetched from web
 
-  -f --fetch        Fetch and build example resources from the web in KB_EX_PATH/_web
+  -f --fetch        Fetch and build example resources from the web in KB_EX_PATH/.web
   -v --version      Print version
   -h --help         Print help
 
