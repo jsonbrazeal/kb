@@ -88,6 +88,8 @@ from kb.resources import (die, note_dirs, kb_dirs, ex_dir, list_resources, searc
 
 def print_or_page(text):
     """Prints all text or pages text depending on size of terminal"""
+    if not text:
+        return
     term_height = int(subprocess.run(['tput', 'lines'], stdout=subprocess.PIPE).stdout)
     if len(text.splitlines()) > term_height - 5:
         pydoc.pager(text)
