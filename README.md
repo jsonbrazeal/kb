@@ -13,9 +13,9 @@ Usage:
   kb -e <resource>
   kb -c <resource>
   kb -x <resource>
-  kb -l [-a] [-n]
-  kb -d [-a] [-n]
-  kb -s <keyword> [-a] [-n]
+  kb -l [-a] [-n] [-w]
+  kb -d [-a] [-n] [-w]
+  kb -s <keyword> [-a] [-n] [-w]
   kb -f
   kb -v
   kb -h
@@ -32,6 +32,7 @@ Options:
 
   -a --all          Apply action to all resources
   -n --notes        Apply action to plain text notes only (.md or .txt files)
+  -w --web          Include resources fetched from web
 
   -f --fetch        Fetch and build example resources from the web in KB_EX_PATH/_web
   -v --version      Print version
