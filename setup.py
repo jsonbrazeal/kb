@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name="kb",
-    version="1.0.0",
+    version="0.0.1",
     author="Jason Brazeal",
     author_email="jsonbrazeal@gmail.com",
     description="kb is forked from cheat (https://github.com/chrisallenlane/cheat). "

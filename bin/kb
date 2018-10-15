@@ -99,7 +99,7 @@ def print_or_page(text):
 
 if __name__ == '__main__':
     # parse the command-line options
-    options = docopt(__doc__, version='kb 1.0.0')
+    options = docopt(__doc__, version='kb 0.0.1')
 
     # list directories
     if options['--directories']:
